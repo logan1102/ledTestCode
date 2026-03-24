@@ -60,9 +60,10 @@ public class RobotContainer {
         JoystickButton bumperLeft = new JoystickButton(joystick, LogitechControllerButtons.bumperLeft);
         JoystickButton bumperRight = new JoystickButton(joystick,(LogitechControllerButtons.bumperRight));
         
-        a.whileTrue(leds.runPattern(LEDPattern.rainbow(255,188)));
+        a.whileTrue(leds.pulsingCommand());
         b.whileTrue(leds.rainbowCommand());
-        x.whileTrue(leds.pulsingCommand());
+        y.whileTrue(leds.aligningCommand());
+        x.whileTrue(leds.correctCommand());
   }
 
   /**

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Percent;
 import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.Map;
 import java.util.function.Supplier;
@@ -41,7 +42,11 @@ public class Leds extends SubsystemBase {
 
 
 
-    Map<Double, Color> maskSteps = Map.of(0.0,Color.kWhite,0.5,Color.kBlack);
+
+    
+
+
+    Map<Double, Color> maskSteps = Map.of(0.0,Color.kWhite,0.125,Color.kBlack,0.25,Color.kWhite,0.375,Color.kBlack,0.5,Color.kWhite,0.625,Color.kBlack,0.75,Color.kWhite,0.875,Color.kBlack);
     LEDPattern base = LEDPattern.rainbow(255, 255);
     LEDPattern mask =
         LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Hertz.of(250));
@@ -64,6 +69,7 @@ public class Leds extends SubsystemBase {
 
     public void updateData(){
         led.setData(buffer);
+
     }
 
     @Override
@@ -86,14 +92,35 @@ public class Leds extends SubsystemBase {
         return run(()->loadingBarPattern.applyTo(buffer));
     }
 
+
+ 
+
     public Command pulsingCommand(){
         LEDPattern mask =
-        LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Percent.per(Second).of(25));    
+        LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Percent.per(Second).of(100));    
 
-        LEDPattern pulsing = base.mask(mask);
+        LEDPattern pulsing = LEDPattern.solid(Color.kGold).mask(mask);
         return run(()->pulsing.applyTo(buffer));
     }
 
+
+    public Command breathCommand(Color color){
+        return run(()->LEDPattern.solid(color).breathe(Seconds.of(1)).applyTo(buffer));
+    }
+
+    public Command correctCommand(){
+       return run(()->LEDPattern.solid(Color.kGreen).breathe(Seconds.of(0.25)).applyTo(buffer));
+    }
+
+    public Command aligningCommand(){
+        return run(()->LEDPattern.solid(Color.kRed).breathe(Seconds.of(1)).applyTo(buffer));
+    }
+
+    public void changeShiftCommand(){
+        if(DriverStation.getMatchTime() < 133 && DriverStation.getMatchTime() > 130){
+            run(()->LEDPattern.solid(Color.kPurple).breathe(Seconds.of(1)).applyTo(buffer));
+        }
+    }
 
 
     private int getShiftLength(){
