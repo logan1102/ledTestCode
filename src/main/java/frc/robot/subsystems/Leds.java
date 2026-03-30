@@ -10,6 +10,8 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.AddressableLED;
@@ -18,10 +20,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Leds extends SubsystemBase {
-    
+
     // an led strip
     private AddressableLED led;
     // how many leds on the strip
@@ -30,31 +33,43 @@ public class Leds extends SubsystemBase {
     private AddressableLEDBuffer buffer;
 
 
-    private final LEDPattern rainbow = LEDPattern.rainbow(255, 128);
+    LEDPattern rainbow = LEDPattern.rainbow(255,128);
+    LEDPattern gradient = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kGold, Color.kDarkBlue);
     private static final Distance spacing = Meters.of(1 / 120.0);
     private final LEDPattern scrollingRainbow =
         rainbow.scrollAtAbsoluteSpeed(MetersPerSecond.of(1), spacing);
 
 
+    private static final Distance gradientSpacing = Meters.of(1 / 30.0);
+    private final LEDPattern scrollingGradient = 
+        gradient.scrollAtAbsoluteSpeed(MetersPerSecond.of(1), gradientSpacing);
+
+
+    LEDPattern base = LEDPattern.rainbow(255, 255);
 
     private Supplier<Double> loadingBar = ()->5.0;
     LEDPattern loadingBarPattern = LEDPattern.progressMaskLayer(()->loadingBar.get()/ length);
+    
+    
 
 
-
-
+    LEDPattern rainbowBarPattern = gradient.mask(LEDPattern.progressMaskLayer(()->loadingBar.get()/ length));
     
 
 
     Map<Double, Color> maskSteps = Map.of(0.0,Color.kWhite,0.125,Color.kBlack,0.25,Color.kWhite,0.375,Color.kBlack,0.5,Color.kWhite,0.625,Color.kBlack,0.75,Color.kWhite,0.875,Color.kBlack);
-    LEDPattern base = LEDPattern.rainbow(255, 255);
+    
     LEDPattern mask =
         LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Hertz.of(250));
 
     LEDPattern pulsing = base.mask(mask);
 
+    Map<Double, Color> blueAndYellowSteps = Map.of(0.0,Color.kGold,0.125,Color.kDarkBlue,0.25,Color.kGold,0.375,Color.kDarkBlue,0.5,Color.kGold,0.625,Color.kDarkBlue,0.75,Color.kGold,0.875,Color.kDarkBlue);
+    LEDPattern blueAndYellowPattern =
+        LEDPattern.steps(blueAndYellowSteps).scrollAtRelativeSpeed(Percent.per(Second).of(25));
 
     public Leds(){
+
         this.length = 60;
 
         this.led = new AddressableLED(0);
@@ -66,6 +81,11 @@ public class Leds extends SubsystemBase {
 
         setDefaultCommand(loadingBarCommand());
     }
+
+
+
+ 
+
 
     public void updateData(){
         led.setData(buffer);
@@ -93,11 +113,21 @@ public class Leds extends SubsystemBase {
     }
 
 
- 
+    public Command customLoadingBarCommand(double currentVelocity, double targetVelocity){
+        rainbowBarPattern = rainbow.mask(LEDPattern.progressMaskLayer(()->currentVelocity/targetVelocity));
+        return run(()-> rainbowBarPattern.applyTo(buffer));
+    }
+
+    public Command scrollingBlueAndYellowCommmand(){
+        return run(()-> scrollingGradient.applyTo(buffer));
+    }
+    public Command scrollingBlueAndYellowStepsCommand(){
+        return run(()->blueAndYellowPattern.applyTo(buffer));
+    }
 
     public Command pulsingCommand(){
         LEDPattern mask =
-        LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Percent.per(Second).of(100));    
+        LEDPattern.steps(maskSteps).scrollAtRelativeSpeed(Percent.per(Second).of(75));    
 
         LEDPattern pulsing = LEDPattern.solid(Color.kGold).mask(mask);
         return run(()->pulsing.applyTo(buffer));
@@ -125,6 +155,7 @@ public class Leds extends SubsystemBase {
 
     private int getShiftLength(){
         int shiftLength = 0;
+        if(!DriverStation.isAutonomous()){
         if(DriverStation.getMatchTime()< 140 && DriverStation.getMatchTime() >= 130){
             shiftLength = 10;
         } else if(DriverStation.getMatchTime() < 30){
@@ -133,11 +164,17 @@ public class Leds extends SubsystemBase {
             shiftLength = 25;
         }
 
+        } else{
+            shiftLength = 20;
+        }
+
         return shiftLength;
     }
 
     private int getShiftEnd(){
                int shiftEnd = 0;
+
+
         if(DriverStation.getMatchTime()< 140 && DriverStation.getMatchTime() >= 130){
             shiftEnd = 130;
         } else if(DriverStation.getMatchTime() < 130 && DriverStation.getMatchTime() >= 105 ){
@@ -152,6 +189,7 @@ public class Leds extends SubsystemBase {
             shiftEnd = 0;
         }
 
+     
         return shiftEnd; 
     }
 

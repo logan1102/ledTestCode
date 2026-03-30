@@ -6,7 +6,11 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Leds;
+
 import frc.robot.subsystems.boringLeds;
+
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.util.Color;
@@ -24,12 +28,17 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  
+
   private Leds leds = new Leds();
+
+
+
+
   // private boringLeds boringLeds = new boringLeds();
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+
   }
 
   /**
@@ -59,11 +68,16 @@ public class RobotContainer {
         JoystickButton triggerRight = new JoystickButton(joystick, LogitechControllerButtons.triggerRight);
         JoystickButton bumperLeft = new JoystickButton(joystick, LogitechControllerButtons.bumperLeft);
         JoystickButton bumperRight = new JoystickButton(joystick,(LogitechControllerButtons.bumperRight));
+
+
         
         a.whileTrue(leds.pulsingCommand());
         b.whileTrue(leds.rainbowCommand());
         y.whileTrue(leds.aligningCommand());
-        x.whileTrue(leds.correctCommand());
+        x.whileTrue(leds.customLoadingBarCommand(49,60));
+        
+        bumperLeft.whileTrue(leds.scrollingBlueAndYellowCommmand());
+        bumperRight.whileTrue(leds.scrollingBlueAndYellowStepsCommand());
   }
 
   /**
